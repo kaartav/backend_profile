@@ -1,20 +1,19 @@
-// import mongoose, { mongo } from "mongoose";
-// const app = express();
-// import express from "express";
-
+import { app } from "./app.js";
 import connectDB from "../db/index.js";
+import dotenv from "dotenv";
+
+dotenv.config({ path: "./env" });
 
 connectDB()
   .then(() => {
-    app.listein(process.env.PORT || 8000, () => {
-      console.log(`app listeining at ${process.env.PORT}`);
+    app.listen(process.env.PORT || 8000, () => {
+      console.log(`app listening at ${process.env.PORT || 8000}`);
     });
-    app.on(
-      ("errror",
-      (error) => {
-        console.log("ERRR:", error);
-        throw error;
-      })
-    );
+
+    // Fix: Correct syntax for adding an error event listener
+    app.on("error", (error) => {
+      console.log("ERROR:", error);
+      throw error;
+    });
   })
-  .catch(console.error("DB connection error"));
+  .catch((error) => console.error("DB connection error:", error));
