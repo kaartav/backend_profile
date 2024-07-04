@@ -5,35 +5,39 @@ import dotenv from "dotenv";
 dotenv.config({ path: "./env" });
 
 // User Schema
-const UserSchema = new Schema({
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  profile_pic: {
-    type: String, // cloudinary url
-    required: true,
+const UserSchema = new Schema(
+  {
+    username: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    profile_pic: {
+      type: String, // cloudinary url
+      required: true,
+    },
+    specialization: { type: String, required: true, default: "None" },
+    location: { type: String, required: true, default: "None" },
+    refreshToken: String,
   },
-  specialization: String,
-  location: String,
-  refreshToken: String,
-});
+  { timestamps: true }
+);
 
 //.pre is before and save is just before saving apply this function ..as encription takes a lot of cpu and timr so async /////this is a middle ware
-userSchema.pre("save", async function (next) {
+
+UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = bcrypt.hash(this.password, 10);
   next();
 });
 
-userSchema.methods.isPasswordCorrect = async function (password) {
+UserSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 }; //returns boolean
-userSchema.methods.generateAccessTokens = function () {
+UserSchema.methods.generateAccessTokens = function () {
   return jwt.sign({}, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
   });
 };
-userSchema.methods.generateRefershTokens = function () {
+UserSchema.methods.generateRefershTokens = function () {
   return jwt.sign({}, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
   });
