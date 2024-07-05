@@ -20,7 +20,10 @@ const uploadOnCloudinary = async (localfilepath) => {
       resource_type: "auto",
     });
     console.log("File is uploaded on cloudinary", (await response).url);
-    fs.unlinkSync(localfilepath);
+    if (localfilepath != "public/temp/default.png") {
+      fs.unlinkSync(localfilepath);
+    }
+
     return response;
   } catch (error) {
     fs.unlinkSync(localfilepath); //as the upload as failed and we dont want to keep any thing on our temporary local server

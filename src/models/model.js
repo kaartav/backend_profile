@@ -24,23 +24,49 @@ const UserSchema = new Schema(
 //.pre is before and save is just before saving apply this function ..as encription takes a lot of cpu and timr so async /////this is a middle ware
 
 UserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = bcrypt.hash(this.password, 10);
-  next();
+  if (!this.isModified("password")) {
+    console.log("Password not modified, skipping encryption.");
+    return next();
+  }
+
+  try {
+    console.log("Encrypting password...");
+    this.password = await bcrypt.hash(this.password, 10);
+    console.log("Password encrypted.");
+    next();
+  } catch (error) {
+    console.error("Error encrypting password:", error);
+    next(error);
+  }
 });
 
 UserSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 }; //returns boolean
-UserSchema.methods.generateAccessTokens = function () {
-  return jwt.sign({}, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-  });
+UserSchema.methods.generateAccessToken = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+      email: this.email,
+      username: this.username,
+      fullName: this.fullName,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+    }
+  );
 };
-UserSchema.methods.generateRefershTokens = function () {
-  return jwt.sign({}, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-  });
+UserSchema.methods.generateRefreshToken = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+    }
+  );
 };
 export const User = mongoose.model("User", UserSchema);
 
