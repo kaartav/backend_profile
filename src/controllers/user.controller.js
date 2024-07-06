@@ -70,11 +70,11 @@ const registerUser = asyncHandler(async (req, res) => {
 
 export { registerUser };
 
-const generateAccessTokensAndRefereshToken = async (userId) => {
+const generateAccessTokensAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
-    const accessToken = user.generateAccessTokens();
-    const refreshToken = user.generateRefershTokens();
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
 
     // this will save the user's refresh token in database for further verification,,no validation password will be there at this point for the user
     user.refreshToken = refreshToken; // adding the value to the instance
@@ -82,7 +82,10 @@ const generateAccessTokensAndRefereshToken = async (userId) => {
 
     return { accessToken, refreshToken };
   } catch (error) {
-    throw new ApiError(500, "Access or Refresh token could not be generated");
+    throw new ApiError(
+      500,
+      "Failed to generate tokens: " + (error.message || "Unknown error")
+    );
   }
 };
 
@@ -95,6 +98,7 @@ const loginUser = asyncHandler(async (req, res) => {
   //right password generate and give access and refresh tokens
   //send secure cookies and tell login succcesful
   const { email, username, password } = req.body;
+  console.log(req.body, req.files);
   console.log(email, username);
 
   if (!(username || email)) {
@@ -113,7 +117,7 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid user credentials");
   }
   const { accessToken, refreshToken } =
-    await generateAccessTokensAndRefereshToken(user._id);
+    await generateAccessTokensAndRefreshToken(user._id);
   const loggedInUser = await User.findOne(user._id).select(
     "-password -refreshToken"
   );
@@ -141,9 +145,6 @@ const loginUser = asyncHandler(async (req, res) => {
 export { loginUser };
 
 const logoutUser = asyncHandler(async (req, res) => {
-  // const { username } = req.body;
-  // const user = await User.findOne(username);
-  // generateAccessTokensAndRefereshToken(user._id);
   await User.findByIdAndUpdate(
     req.user._id,
     {
@@ -161,8 +162,8 @@ const logoutUser = asyncHandler(async (req, res) => {
   };
   return res
     .status(200)
-    .clearcookie("accessToken", options)
-    .clearcookie("refreshToken", options)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, "user logged out"));
 });
 export { logoutUser };
