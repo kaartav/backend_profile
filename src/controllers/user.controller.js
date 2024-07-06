@@ -142,7 +142,6 @@ const loginUser = asyncHandler(async (req, res) => {
       )
     );
 });
-
 export { loginUser };
 
 const logoutUser = asyncHandler(async (req, res) => {
@@ -150,7 +149,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     req.user._id,
     {
       $set: {
-        refreshToken: undefined,
+        refreshToken: undefined, //mongodb properties
       },
     },
     {
@@ -209,5 +208,45 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, error?.message || "invalid refresh token");
   }
 });
-
 export { refreshAccessToken };
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const user = await User.findById(req.user?._id);
+  const isPasseordCorrect = await user.isPasswordCorrect(oldPassword);
+  if (!isPasseordCorrect) {
+    throw new ApiError(400, "Wrong password");
+  }
+  user.password = newPassword; // now in methods {will go to ismodiefied if condition and that will be executed }....we are saving it so in methods we have 'save'
+  await user.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"));
+});
+export { changeCurrentPassword };
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  return res.status(200).json(200, req.user, "Current user fetched");
+});
+export { getCurrentUser };
+
+const updateProfilePic = asyncHandler(async (req, res) => {
+  //when ever we use multer middleware we get req.files
+  const profilePicLocalPath = req.files?.path;
+  if (!profilePicLocalPath) {
+    throw new ApiError(400, "Upload a new picture");
+  }
+  const profilePic = await uploadOnCloudinary(profilePicLocalPath);
+  if (!profilePic.url) {
+    throw new ApiError(400, "Upload on cloudinary failed from local path");
+  }
+  const user = await User.findByIdAndDelete(
+    req.user?._id,
+    { $set: { profilePic: profilePic.url } },
+    { new: true }
+  ).select("-password");
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Successfully updated profile pic"));
+});
+export { updateProfilePic };
