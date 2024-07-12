@@ -20,7 +20,7 @@ const UserSchema = new Schema(
   },
   { timestamps: true }
 );
-
+export const User = mongoose.model("User", UserSchema);
 //.pre is before and save is just before saving apply this function ..as encription takes a lot of cpu and timr so async /////this is a middle ware
 
 UserSchema.pre("save", async function (next) {
@@ -68,45 +68,45 @@ UserSchema.methods.generateRefreshToken = function () {
     }
   );
 };
-export const User = mongoose.model("User", UserSchema);
 
 // Blog Schema
 const BlogSchema = new Schema({
-  title: { type: String, required: true },
+  title: { type: String, required: true, unique: true },
   content: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
-  author: { type: Schema.Types.ObjectId, ref: "User" },
-  likesCount: { type: Number, default: 0 },
-  commentsCount: { type: Number, default: 0 },
+  // author: { type: Schema.Types.ObjectId, ref: "User" },
+  // likesCount: { type: Number, default: 0 },
+  // commentsCount: { type: Number, default: 0 },
+  url: { type: String },
 });
 
 export const Blog = mongoose.model("Blog", BlogSchema);
 
-// Media Schema
-const MediaSchema = new Schema({
-  blogId: { type: Schema.Types.ObjectId, ref: "Blog" },
-  url: { type: String, required: true },
-  type: { type: String, required: true },
-});
+// // media Schema
+// const MediaSchema = new Schema({
+//   blogId: { type: Schema.Types.ObjectId, ref: "Blog" },
 
-export const Media = mongoose.model("Media", MediaSchema);
+//   type: { type: String, required: true },
+// });
 
-// Comment Schema
-const CommentSchema = new Schema({
-  content: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-  blogId: { type: Schema.Types.ObjectId, ref: "Blog" },
-  author: { type: Schema.Types.ObjectId, ref: "User" },
-});
+// export const Media = mongoose.model("Media", MediaSchema);
 
-export const Comment = mongoose.model("Comment", CommentSchema);
+// // Comment Schema
+// const CommentSchema = new Schema({
+//   content: { type: String, required: true },
+//   createdAt: { type: Date, default: Date.now },
+//   blogId: { type: Schema.Types.ObjectId, ref: "Blog" },
+//   author: { type: Schema.Types.ObjectId, ref: "User" },
+// });
 
-// Reaction Schema
-const ReactionSchema = new Schema({
-  type: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-  blogId: { type: Schema.Types.ObjectId, ref: "Blog" },
-  author: { type: Schema.Types.ObjectId, ref: "User" },
-});
+// export const Comment = mongoose.model("Comment", CommentSchema);
 
-export const Reaction = mongoose.model("Reaction", ReactionSchema);
+// // Reaction Schema
+// const ReactionSchema = new Schema({
+//   type: { type: String, required: true },
+//   createdAt: { type: Date, default: Date.now },
+//   blogId: { type: Schema.Types.ObjectId, ref: "Blog" },
+//   author: { type: Schema.Types.ObjectId, ref: "User" },
+// });
+
+// export const Reaction = mongoose.model("Reaction", ReactionSchema);

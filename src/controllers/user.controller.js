@@ -226,7 +226,9 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 export { changeCurrentPassword };
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-  return res.status(200).json(200, req.user, "Current user fetched");
+  return res
+    .status(200)
+    .json(new ApiResponse(200, req.user, "Current user fetched"));
 });
 export { getCurrentUser };
 
@@ -240,6 +242,7 @@ const updateProfilePic = asyncHandler(async (req, res) => {
   if (!profilePic.url) {
     throw new ApiError(400, "Upload on cloudinary failed from local path");
   }
+  // delete the old pp
   const user = await User.findByIdAndDelete(
     req.user?._id,
     { $set: { profilePic: profilePic.url } },
